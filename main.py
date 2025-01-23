@@ -1,4 +1,4 @@
-import csv,os,json
+import csv,os,json,logging
 import datetime as dt
 import modules.calendar as cal
 from datetime import timedelta
@@ -8,11 +8,16 @@ SLUG_FORMAT="%Y-%m-%d"
 SATURDAY = 5
 SUNDAY = 6
 
+log_format = '%(asctime)s[%(filename)s:%(lineno)d][%(levelname)s] %(message)s'
+log_level = os.getenv("LOGLEVEL", logging.INFO)
+logging.basicConfig(format=log_format, datefmt='%Y-%m-%d %H:%M:%S%z', level=log_level)
+
 if __name__ == '__main__':
 
   jp_holidays : dict[str, Holiday] = {}
   ly_holidays : dict[str, Holiday] = {}
 
+  logging.info("opening syukujitsu.csv...")
   with open('syukujitsu.csv', encoding="Shift-JIS") as csvfile:
     events = csv.DictReader(csvfile)
     for event in events:
@@ -24,6 +29,7 @@ if __name__ == '__main__':
       )
   jp_holidays_slugs = list(jp_holidays.keys())
 
+  logging.info("creating items...")
   for slug, event in jp_holidays.items():
 
     # 1/1があったら年末年始の予定を作る(CSVは1/1から時系列で並んでいること前提)
@@ -45,6 +51,7 @@ if __name__ == '__main__':
           break
 
   # それぞれics/jsonで出力
+  logging.info("generating ical/json ...")
   ly_cal = cal.initCal("LY Holiday")
   lyj_cal = cal.initCal("LYJ Holiday")
   ly_list = []
@@ -67,3 +74,5 @@ if __name__ == '__main__':
     json.dump(ly_list,f)
   with open("./dist/lyj-holidays.json", mode='w') as f:
     json.dump(lyj_list,f)
+
+  logging.info("all process were finished successfully!")

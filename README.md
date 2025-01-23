@@ -16,9 +16,15 @@ LINEヤフー株式会社における土日以外の休日をまとめた iCal/J
 ## make
 
 ```sh
+# clone
 git clone https://github.com/legnoh/ly-holiday.git && cd ly-holiday
+
+# prepare
 curl -LO https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv
-pipenv run main
+uv sync
+
+# execute
+uv run main.py
 ```
 
 ## appendix
