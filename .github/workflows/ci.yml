@@ -1,15 +1,19 @@
 name: CI
 
 on:
+  push:
+    branches: ["main"]
   pull_request_target:
     branches: ["main"]
   workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: Check Out Repo 
+    - name: Checkout repository
       uses: actions/checkout@v4
     
     - name: Setup uv
@@ -18,7 +22,7 @@ jobs:
         enable-cache: true
 
     - name: Install dependencies
-      run: uv sync --dev
+      run: uv sync --frozen
 
     - name: set locale
       run: |
@@ -26,20 +30,31 @@ jobs:
         sudo update-locale LANG=ja_JP.UTF-8
 
     - name: Download syukujitsu.csv
-      run: curl -vvv -LO ${{ env.CSV_URL }}
+      run: curl -vvv -LO ${CSV_URL}
       env:
         CSV_URL: https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv
 
     - name: Execute
       run: uv run main.py
       env:
-        TZ: ${{ secrets.TZ }}
+        TZ: "Asia/Tokyo"
+
+    - name: Set Build parameter
+      id: build-parameter
+      run: |
+        if [[ "${{ github.event_name }}" == "pull_request_target" ]]; then
+          echo "is_production=false" >> $GITHUB_OUTPUT
+        else
+          echo "is_production=true" >> $GITHUB_OUTPUT
+        fi
 
     - name: Deploy to Netlify
       uses: nwtgck/actions-netlify@v3.0
       with:
+        alias: ${{ github.head_ref }}
         publish-dir: './dist'
-        production-deploy: false
+        production-deploy: ${{ steps.build-parameter.outputs.is_production }}
+        github-token: ${{ github.token }}
       env:
         NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
         NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
