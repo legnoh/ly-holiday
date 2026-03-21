@@ -24,7 +24,7 @@ dependencies = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "icalendar", specifier = ">=6.3.2" }]
+requires-dist = [{ name = "icalendar", specifier = ">=7.0.3" }]
 
 [[package]]
 name = "python-dateutil"
