@@ -5,7 +5,7 @@ permissions:
 on:
   push:
     branches: ["main"]
-  pull_request_target:
+  pull_request:
     branches: ["main"]
   workflow_dispatch:
   schedule:
@@ -46,13 +46,14 @@ jobs:
     - name: Set Build parameter
       id: build-parameter
       run: |
-        if [[ "${{ github.event_name }}" == "pull_request_target" ]]; then
+        if [[ "${{ github.event_name }}" == "pull_request" ]]; then
           echo "is_production=false" >> $GITHUB_OUTPUT
         else
           echo "is_production=true" >> $GITHUB_OUTPUT
         fi
 
     - name: Deploy to Netlify
+      if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
       uses: nwtgck/actions-netlify@v4.0
       with:
         alias: ${{ github.head_ref }}
